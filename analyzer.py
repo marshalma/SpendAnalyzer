@@ -2,16 +2,17 @@
 
 import csv
 import os
+import pandas
 import sys
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 from collections import defaultdict
 from datetime import datetime
-from pprint import pprint
-
+from pprint import pprint 
 AMEX_CSV_HEADER = ["Date","Description","Amount","Extended Details","Appears On Your Statement As","Address","City/State","Zip Code","Country","Reference","Category"]
 
 def _log(log, level):
@@ -65,7 +66,7 @@ def _aggregate_by_month(data):
         if amount >= 0:
             spending[month] += amount
         else:
-            credit[month] += amount 
+            credit[month] += -amount 
     spending, credit = dict(spending), dict(credit)
     return spending, credit
 
@@ -82,7 +83,7 @@ def _aggregate_by_column(data, column):
         if amount >= 0:
             spending[keyname] += amount
         else:
-            credit[keyname] += amount
+            credit[keyname] += -amount
 
     spending, credit = dict(spending), dict(credit)
     return spending, credit
@@ -106,9 +107,7 @@ AGGR_METHODS = {
 def aggregate_result(data, method):
     return method(data)
 
-def plot_bar_chart(data, category):
-    log_info("Plotting Bar Chart - {}".format(category))
-
+def _plot_preprocess(data, category):
     spend, credit = data[0], data[1]
     plt.ylabel('Amount $')
     plt.xlabel(category);
@@ -117,12 +116,35 @@ def plot_bar_chart(data, category):
     labels = sorted(list(set(spend.keys()).union(set(credit.keys()))))
     spend_x = [spend[l] if l in spend else 0 for l in labels]
     credit_x = [credit[l] if l in credit else 0 for l in labels]
-    ind = np.arange(len(labels))
+
+    return (labels, spend_x, credit_x)
+
+def plot_bar_seaborn(data, category):
+    log_info("Plotting Bar Chart - {}".format(category))
+    x, y1, y2 = _plot_preprocess(data, category)
+
+    df = pandas.DataFrame({
+             'Class': x + x,
+	     "Spend/Credit": ["Spend"] * len(x) + ["Credit"] * len(x),
+	     "Amount": y1 + y2,
+	     })
+    log_info(df.to_string())
+    sns.catplot(x="Class", y="Amount", hue="Spend/Credit", data=df, kind='bar')
+    plt.draw()
+    plt.pause(0.001)
+    input("Press enter to continue...")
+    plt.close()
+
+def plot_bar_matplotlib(data, category):
+    log_info("Plotting Bar Chart - {}".format(category))
+
+    x, y1, y2 = _plot_preprocess(data, category)
+    ind = np.arange(len(x))
 
     width = 0.35
-    plt.bar(ind, spend_x, width, label='Spend')
-    plt.bar(ind + width, credit_x, width, label='Credit')
-    plt.xticks(ind + width / 2, labels)
+    plt.bar(ind, y1, width, label='Spend')
+    plt.bar(ind + width, y2, width, label='Credit')
+    plt.xticks(ind + width / 2, x)
     plt.legend(loc='best')
 
     plt.draw()
@@ -132,8 +154,8 @@ def plot_bar_chart(data, category):
 
 def visualize(data, category):
     log_info("Visualizing ...")
-    pprint(data)
-    plot_bar_chart(data, category)
+    #pprint(data)
+    plot_bar_seaborn(data, category)
 
 def main():
     csv_directory = sys.argv[1]
