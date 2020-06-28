@@ -5,10 +5,12 @@ import os
 import sys
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from collections import defaultdict
 from datetime import datetime
 from pprint import pprint
-
 
 AMEX_CSV_HEADER = ["Date","Description","Amount","Extended Details","Appears On Your Statement As","Address","City/State","Zip Code","Country","Reference","Category"]
 
@@ -63,8 +65,7 @@ def _aggregate_by_month(data):
         if amount >= 0:
             spending[month] += amount
         else:
-            credit[month] += amount
-
+            credit[month] += amount 
     spending, credit = dict(spending), dict(credit)
     return spending, credit
 
@@ -96,18 +97,43 @@ def _aggregate_total(data):
     return _aggregate_by_column(data, "Total")
 
 AGGR_METHODS = {
-    "MONTH": _aggregate_by_month,
-    "CATEGORY": _aggregate_by_category,
-    "MERCHANT": _aggregate_by_merchant,
-    "TOTAL": _aggregate_total,
+    "Month": _aggregate_by_month,
+    "Category": _aggregate_by_category,
+    "Merchant": _aggregate_by_merchant,
+    "Total": _aggregate_total,
 }
 
 def aggregate_result(data, method):
     return method(data)
 
-def visualize(data):
+def plot_bar_chart(data, category):
+    log_info("Plotting Bar Chart - {}".format(category))
+
+    spend, credit = data[0], data[1]
+    plt.ylabel('Amount $')
+    plt.xlabel(category);
+    plt.title("Amount per {}".format(category));
+
+    labels = sorted(list(set(spend.keys()).union(set(credit.keys()))))
+    spend_x = [spend[l] if l in spend else 0 for l in labels]
+    credit_x = [credit[l] if l in credit else 0 for l in labels]
+    ind = np.arange(len(labels))
+
+    width = 0.35
+    plt.bar(ind, spend_x, width, label='Spend')
+    plt.bar(ind + width, credit_x, width, label='Credit')
+    plt.xticks(ind + width / 2, labels)
+    plt.legend(loc='best')
+
+    plt.draw()
+    plt.pause(0.001)
+    input("Press enter to continue...")
+    plt.close()
+
+def visualize(data, category):
     log_info("Visualizing ...")
     pprint(data)
+    plot_bar_chart(data, category)
 
 def main():
     csv_directory = sys.argv[1]
@@ -117,7 +143,9 @@ def main():
     for method, func in AGGR_METHODS.items():
         log_info("Aggregating data by {}".format(method))
         data_aggr = aggregate_result(data, func)
-        visualize(data_aggr)
+        visualize(data_aggr, method)
+
+    log_info("Completed!")
 
 if __name__ == "__main__":
     main()
