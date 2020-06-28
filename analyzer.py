@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/local/bin/python3
 
 import csv
 import os
@@ -114,7 +114,7 @@ def main():
 
     data = read_amex_csv(files)
 
-    for method, func in AGGR_METHODS.iteritems():
+    for method, func in AGGR_METHODS.items():
         log_info("Aggregating data by {}".format(method))
         data_aggr = aggregate_result(data, func)
         visualize(data_aggr)
