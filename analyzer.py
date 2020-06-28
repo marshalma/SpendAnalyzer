@@ -30,7 +30,7 @@ def log_error(log):
 def locate_amex_csv(directory):
     # TODO: verify that csv is AMEX specific
     files = list(filter(lambda x: x.endswith("csv"), os.listdir(directory)))
-    return files
+    return [os.path.join(directory, f) for f in files]
 
 def read_amex_csv(files):
     transactions = []
@@ -110,8 +110,8 @@ def visualize(data):
     pprint(data)
 
 def main():
-    files = locate_amex_csv('.')
-
+    csv_directory = sys.argv[1]
+    files = locate_amex_csv(csv_directory)
     data = read_amex_csv(files)
 
     for method, func in AGGR_METHODS.items():
