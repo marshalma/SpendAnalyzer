@@ -23,16 +23,19 @@ def locate_csv(directory):
 
 def read_csv(files):
     transactions = []
+    mapping = defaultdict(str)
+
     for f in files:
         csv_obj = csv_processor(f)
 
         for transact in csv_obj.get_rows():
             transactions.append(transact)
+            mapping[transact[2]] = transact[1]
 
         csv_obj.close()
 
     log_info("Found {} transactions".format(len(transactions)))
-    return transactions
+    return transactions, mapping
 
 def _aggregate_by_month(data):
     spending = defaultdict(int)
@@ -92,19 +95,19 @@ AGGR_METHODS = {
 def aggregate_result(data, method):
     return method(data)
 
-def visualize(data, category):
+def visualize(data, category, mapping):
     log_info("Visualizing ...")
-    print_table(data, category)
+    print_table(data, category, mapping)
 
 def main():
     csv_directory = sys.argv[1]
     files = locate_csv(csv_directory)
-    data = read_csv(files)
+    data, mapping = read_csv(files)
 
     for method, func in AGGR_METHODS.items():
         log_info("Aggregating data by {}".format(method))
         data_aggr = aggregate_result(data, func)
-        visualize(data_aggr, method)
+        visualize(data_aggr, method, mapping)
 
     log_info("Completed!")
 
