@@ -13,8 +13,13 @@ from az_csv import csv_processor
 from az_plot_utils import print_table, plot_bar_seaborn, plot_bar_matplotlib
 
 def locate_csv(directory):
-    files = list(filter(lambda x: x.endswith("csv"), os.listdir(directory)))
-    return [os.path.join(directory, f) for f in files]
+    res = []
+
+    for root, dirs, files in os.walk(directory):
+        for f in files:
+            if f.endswith("csv") or f.endswith("CSV"):
+                 res.append(os.path.join(root, f))
+    return res
 
 def read_csv(files):
     transactions = []
