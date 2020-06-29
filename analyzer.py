@@ -2,13 +2,8 @@
 
 import csv
 import os
-import pandas
 import sys
 import time
-
-import matplotlib.pyplot as plt
-import numpy as np
-import seaborn as sns
 
 from collections import defaultdict
 from datetime import datetime
@@ -16,6 +11,7 @@ from pprint import pprint
 
 from az_log import log_info, log_warn, log_debug, log_error
 from az_constants import AMEX_CSV_HEADER
+from az_plot_utils import print_table, plot_bar_seaborn, plot_bar_matplotlib
 
 def locate_amex_csv(directory):
     # TODO: verify that csv is AMEX specific
@@ -94,55 +90,9 @@ AGGR_METHODS = {
 def aggregate_result(data, method):
     return method(data)
 
-def _plot_preprocess(data, category):
-    spend, credit = data[0], data[1]
-    plt.ylabel('Amount $')
-    plt.xlabel(category);
-    plt.title("Amount per {}".format(category));
-
-    labels = sorted(list(set(spend.keys()).union(set(credit.keys()))))
-    spend_x = [spend[l] if l in spend else 0 for l in labels]
-    credit_x = [credit[l] if l in credit else 0 for l in labels]
-
-    return (labels, spend_x, credit_x)
-
-def plot_bar_seaborn(data, category):
-    log_info("Plotting Bar Chart - {}".format(category))
-    x, y1, y2 = _plot_preprocess(data, category)
-
-    df = pandas.DataFrame({
-             'Class': x + x,
-	     "Spend/Credit": ["Spend"] * len(x) + ["Credit"] * len(x),
-	     "Amount": y1 + y2,
-	     })
-    log_info(df.to_string())
-    sns.catplot(x="Class", y="Amount", hue="Spend/Credit", data=df, kind='bar')
-    plt.draw()
-    plt.pause(0.001)
-    input("Press enter to continue...")
-    plt.close()
-
-def plot_bar_matplotlib(data, category):
-    log_info("Plotting Bar Chart - {}".format(category))
-
-    x, y1, y2 = _plot_preprocess(data, category)
-    ind = np.arange(len(x))
-
-    width = 0.35
-    plt.bar(ind, y1, width, label='Spend')
-    plt.bar(ind + width, y2, width, label='Credit')
-    plt.xticks(ind + width / 2, x)
-    plt.legend(loc='best')
-
-    plt.draw()
-    plt.pause(0.001)
-    input("Press enter to continue...")
-    plt.close()
-
 def visualize(data, category):
     log_info("Visualizing ...")
-    #pprint(data)
-    plot_bar_seaborn(data, category)
+    print_table(data, category)
 
 def main():
     csv_directory = sys.argv[1]
