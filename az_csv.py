@@ -7,7 +7,7 @@ from az_log import log_error, log_info
 from datetime import datetime
 
 AMEX_CSV_HEADER = ["Date","Description","Amount","Extended Details","Appears On Your Statement As","Address","City/State","Zip Code","Country","Reference","Category"]
-CHASE_CSV_HEADER = ["Transaction Date","Post Date","Description","Category","Type","Amount"]
+CHASE_CSV_HEADER = ["Transaction Date","Post Date","Description","Category","Type","Amount","Memo"]
 
 header_map = {
     "amex": AMEX_CSV_HEADER,
@@ -20,7 +20,7 @@ key_map = {
 }
 
 date_format_map = {
-    "amex": "%m/%d/%y",
+    "amex": "%m/%d/%Y",
     "chase": "%m/%d/%Y",
 }
 
