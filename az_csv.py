@@ -8,25 +8,30 @@ from datetime import datetime
 
 AMEX_CSV_HEADER = ["Date","Description","Amount","Extended Details","Appears On Your Statement As","Address","City/State","Zip Code","Country","Reference","Category"]
 CHASE_CSV_HEADER = ["Transaction Date","Post Date","Description","Category","Type","Amount","Memo"]
+CITI_CSV_HEADER = ["Date", "Description", "Debit", "Credit", "Category"]
 
 header_map = {
     "amex": AMEX_CSV_HEADER,
     "chase": CHASE_CSV_HEADER,
+    "citi": CITI_CSV_HEADER,
 }
 
 key_map = {
     "amex": {"Date":"Date", "Category":"Category", "Merchant":"Description", "Amount":"Amount"},
     "chase": {"Date":"Transaction Date", "Category":"Category", "Merchant":"Description", "Amount":"Amount"},
+    "citi": {"Date":"Date", "Category":"Category", "Merchant":"Description", "Amount":"Debit"},
 }
 
 date_format_map = {
     "amex": "%m/%d/%Y",
     "chase": "%m/%d/%Y",
+    "citi": "%b %d, %Y",
 }
 
 sign_map = {
     "amex": lambda x:x,
     "chase": lambda x:-x,
+    "citi": lambda x:x
 }
 
 STANDARD_DATE_FORMAT="%m/%d/%y"
@@ -69,7 +74,7 @@ class csv_processor:
             date = datetime.strptime(row[self.date_col], date_format_map[self.csv_type]).strftime(STANDARD_DATE_FORMAT)
             cate = row[self.cate_col]
             merc = row[self.merc_col]
-            amount = sign_map[self.csv_type](float(row[self.amount_col]))
+            amount = sign_map[self.csv_type](float(row[self.amount_col] if len(row[self.amount_col]) > 0 else 0))
 
             yield date, cate, merc, amount
 
